@@ -37,3 +37,9 @@ A test that only passes on one laptop isn't a regression suite yet.
 
 `.github/workflows/mobile-tests.yml` and a note in the flow document on what
 CI runs and when.
+
+## Pitfalls
+
+| Symptom | Cause | Fix |
+| --- | --- | --- |
+| Tests pass locally but time out in CI on elements lower on a screen (the CI screenshot is cut off) | `android-emulator-runner`'s default device profile is 320x640, far smaller than the local emulator | Set `profile:` to the local AVD's `hw.device.name` (e.g. `pixel_6`), so CI and local run the same screen |

@@ -82,6 +82,9 @@ jobs:
           api-level: 35
           target: google_apis
           arch: x86_64
+          # Same phone as the local emulator (Pixel 6, 1080x2400); the default profile is 320x640,
+          # too small for the product screen's quantity and Add to cart button.
+          profile: pixel_6
           disable-animations: true
           emulator-options: -no-window -no-snapshot -noaudio -no-boot-anim -gpu swiftshader_indirect
           script: scripts/run-tests.sh -m "$MARKER"
