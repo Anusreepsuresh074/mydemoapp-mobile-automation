@@ -8,11 +8,16 @@ cd "$root"
 export APPIUM_HOME="$root/.appium"
 export ANDROID_HOME="${ANDROID_HOME:-$HOME/Android/Sdk}"
 export PATH="$ANDROID_HOME/platform-tools:$PATH"
+# Load .env, but values already in the environment win: in CI the secrets arrive as environment
+# variables, and the empty placeholders copied from .env.example must not overwrite them.
 if [[ -f .env ]]; then
-  set -a
-  # shellcheck disable=SC1091
-  source .env
-  set +a
+  while IFS='=' read -r key value; do
+    [[ $key =~ ^[A-Z_][A-Z0-9_]*$ ]] || continue
+    [[ -n "${!key:-}" ]] && continue
+    value="${value%\"}"
+    value="${value#\"}"
+    export "$key=$value"
+  done < .env
 fi
 python="${PYTHON:-$root/.venv/bin/python}"
 [[ -x "$python" ]] || python=python3

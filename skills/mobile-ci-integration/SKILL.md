@@ -43,3 +43,4 @@ CI runs and when.
 | Symptom | Cause | Fix |
 | --- | --- | --- |
 | Tests pass locally but time out in CI on elements lower on a screen (the CI screenshot is cut off) | `android-emulator-runner`'s default device profile is 320x640, far smaller than the local emulator | Set `profile:` to the local AVD's `hw.device.name` (e.g. `pixel_6`), so CI and local run the same screen |
+| Sign-in tests fail in CI with "TEST_USERNAME is not set" although the repository secrets exist | CI copies `.env.example` to `.env`, and the run script loaded it over the environment, replacing the secrets with its empty placeholders | The run script loads `.env` only for keys not already set in the environment, so CI secrets win |
