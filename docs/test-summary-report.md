@@ -47,6 +47,13 @@ Final runs on 2026-09-29, local emulator:
 | Smoke, straight after a cold boot | `-m smoke` | 6 | 6 | 0 | 0 | 83 s |
 | Full regression | `-m regression` | 19 | 17 | 2 | 0 | 250 s |
 
+CI runs on GitHub Actions (Android emulator, Pixel 6, API 35) on 2026-09-29:
+
+| Run | Suite | Result | Duration |
+|---|---|---|---|
+| [36606150334](https://github.com/Anusreepsuresh074/mydemoapp-mobile-automation/actions/runs/36606150334) (push) | smoke | 6 passed | 143 s |
+| [36606749256](https://github.com/Anusreepsuresh074/mydemoapp-mobile-automation/actions/runs/36606749256) (manual) | regression | 17 passed, 2 xfailed (second attempt; the first stopped at the health check, see section 7) | 339 s |
+
 ### Results by feature (full regression)
 
 | Feature | Cases | Passed | Xfailed |
@@ -82,6 +89,9 @@ Both are marked **strict xfail**: the test is expected to fail while the defect 
 |---|---|---|
 | After a cold boot, every test errored with "SplashActivity never started" | The app opened, but the splash screen handed over to `MainActivity` before Appium checked, and Appium only accepted the splash screen | `src/core/driver.py` sets `appWaitActivity` to any of the app's activities. Verified: 6 of 6 smoke tests pass straight after a cold boot. |
 | The test run hung at the end with the Appium server still running | `scripts/run-tests.sh` started Appium through `npx` and stopped only `npx`, not the server | The script starts the Appium binary directly, so the exit trap stops the server. Verified after every run. |
+| In CI, 4 smoke tests timed out on the product screen's quantity and Add to cart button | The CI emulator's default device profile is 320x640, so those elements were below the screen edge (seen in the CI failure screenshot) | The workflow runs the emulator as a Pixel 6 (`profile: pixel_6`), the same 1080x2400 screen as the local emulator |
+| In CI, the sign-in tests failed with "TEST_USERNAME is not set" although the repository secrets existed | CI copies `.env.example` to `.env`, and `run-tests.sh` loaded it over the environment, replacing the secrets with empty placeholders | `run-tests.sh` loads `.env` only for keys not already set, so CI secrets win |
+| One CI regression attempt stopped before any test ran: "emulator-5554 shows a 'not responding' dialog" | A system dialog on the freshly booted CI emulator; not reproduced on the second attempt | None needed: the health check stopped the run as designed instead of producing 19 misleading failures. Watched as an open item (section 8) |
 | CRT-P2-04 first expected the cart to survive a restart | A misread walkthrough note | The case was re-checked on the live app and updated to the observed behaviour (a restart empties the cart) |
 
 ## 8. Coverage and open items
@@ -93,6 +103,7 @@ The [coverage audit](context/mydemoapp-coverage-audit.md) found no blocking gaps
 | 1 | Payment details (R12) are only tested on the happy path | Add validation cases once the field rules are known |
 | 2 | Sorting covers 2 of the 4 orders | Add price high-to-low and name A-to-Z if sorting changes |
 | 3 | Tested on one Android version (API 35) | Add a second API level to CI for broader device coverage |
+| 4 | A freshly booted CI emulator occasionally shows a "not responding" dialog, and the health check stops the run | If it recurs in the nightly runs, dismiss boot-time system dialogs before the health check |
 
 ## 9. How to reproduce
 

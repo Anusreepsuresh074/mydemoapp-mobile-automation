@@ -53,6 +53,8 @@ This is the mobile part of my QA portfolio, alongside my [UI tests in Playwright
 
 - **"SplashActivity never started" after a cold boot.** Every session failed right after the emulator booted, although the app opened fine by hand. Appium's debug log showed that the app *had* started: the splash screen had already handed over to `MainActivity`, and Appium was waiting only for the splash screen. The fix is one session option (`appWaitActivity`) that accepts any of the app's activities, not a longer wait. A warm-up step I tried first didn't help, so I removed it.
 - **Appium kept running after the tests.** The run script started Appium through `npx` and stopped only `npx`, so the server was left behind and the run hung. The script now starts the Appium binary directly, so its exit trap stops the real server.
+- **Passed locally, failed in CI.** 4 smoke tests couldn't find the Add to cart button in GitHub Actions. The CI failure screenshot showed why: the emulator's default screen is 320x640, so the button was below the edge. CI now runs the same Pixel 6 profile (1080x2400) as the local emulator.
+- **CI secrets were being overwritten.** CI copies `.env.example` to `.env`, and the run script loaded it on top of the environment, replacing the login secrets with empty placeholders. Values already in the environment now win.
 - **A test case was based on a misread note.** The cart-after-restart case first expected the cart to survive; I re-checked it on the live app and updated the case to the observed behaviour.
 - **Brief adb drops on the emulator** right after a cold boot or between sessions. Only session **start-up** is hardened (cleaning up leftovers and one retry on those two exact errors); tests themselves are never retried.
 
