@@ -1,0 +1,96 @@
+name: Mobile tests (Android)
+
+# Built by mobile-ci-integration.
+#   pushes to main and pull requests: the smoke tests
+#   nightly at 03:00 UTC and on demand: the full regression
+# The Android emulator runs on an Ubuntu runner with KVM hardware acceleration.
+# One-time repo setup: Settings -> Secrets and variables -> Actions: TEST_USERNAME, TEST_PASSWORD.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * *"
+
+concurrency:
+  group: mobile-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  MARKER: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && 'regression' || 'smoke' }}
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      - run: ruff check . && ruff format --check .
+
+  android:
+    name: Android emulator (${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && 'regression' || 'smoke' }})
+    needs: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      TEST_USERNAME: ${{ secrets.TEST_USERNAME }}
+      TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Enable KVM (hardware acceleration for the emulator)
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install test dependencies and Appium
+        run: |
+          pip install -r requirements.txt
+          npm ci
+          APPIUM_HOME=$PWD/.appium npx appium driver install uiautomator2
+
+      - name: Get the app build (mobile-build-fetch)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: scripts/fetch-build.sh
+
+      - name: Settings
+        run: cp .env.example .env
+
+      - name: Run the tests on an emulator
+        uses: ReactiveCircus/android-emulator-runner@v2.38.0
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          emulator-options: -no-window -no-snapshot -noaudio -no-boot-anim -gpu swiftshader_indirect
+          script: scripts/run-tests.sh -m "$MARKER"
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: allure-results-${{ github.run_id }}
+          path: |
+            allure-results/
+            reports/
+          retention-days: 14

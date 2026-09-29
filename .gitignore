@@ -1,0 +1,15 @@
+.env
+*.local
+builds/
+target/
+allure-results/
+allure-report/
+.venv/
+node_modules/
+.appium/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+target/
+reports/
+allure-report/

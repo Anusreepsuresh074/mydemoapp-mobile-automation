@@ -1,0 +1,9 @@
+{
+  "name": "mydemoapp-mobile-automation",
+  "private": true,
+  "description": "Appium server and Allure CLI for the mobile tests (Node side only)",
+  "devDependencies": {
+    "allure-commandline": "^2.46.1",
+    "appium": "^3.8.0"
+  }
+}
