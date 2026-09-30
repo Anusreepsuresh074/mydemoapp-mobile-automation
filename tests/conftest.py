@@ -4,7 +4,7 @@ import allure
 import pytest
 
 from src.core.config import Settings, credentials
-from src.core.driver import create_driver
+from src.core.driver import create_driver, reset_app
 from src.pages.cart_page import CartPage
 from src.pages.catalog_page import CatalogPage
 from src.pages.checkout_address_page import CheckoutAddressPage
@@ -44,9 +44,7 @@ def driver(settings):
 @pytest.fixture
 def app(driver, settings):
     """A fresh app for every test: clear its data, then launch it (mobile-teardown's "cheap sign-in" strategy)."""
-    driver.terminate_app(settings.app_package)
-    driver.execute_script("mobile: clearApp", {"appId": settings.app_package})
-    driver.activate_app(settings.app_package)
+    reset_app(driver, settings)
     return driver
 
 

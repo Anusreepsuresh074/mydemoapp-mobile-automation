@@ -39,4 +39,7 @@ scripts/env-check.sh
 for setting in window_animation_scale transition_animation_scale animator_duration_scale; do
   adb -s "${DEVICE_NAME:-emulator-5554}" shell settings put global "$setting" 0
 done
+# The CI emulator action leaves stdout non-blocking, so a long failure message ended pytest with a
+# BlockingIOError and lost the summary. Make the output blocking again first.
+"$python" -c 'import os; os.set_blocking(1, True); os.set_blocking(2, True)'
 "$python" -m pytest "$@"

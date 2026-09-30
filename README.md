@@ -72,7 +72,7 @@ The P0 cases that pass form the smoke suite. Every case's status and test is in 
 - **A disabled button is never "clickable".** The quantity-0 test waited forever to tap Add to cart; the page object has a separate method for pressing a disabled button on purpose.
 - **A short wait passed locally but failed in CI.** After the rebuild, the new "is this screen open?" checks used the 3-second wait meant for "is it gone?" checks, and GitHub's slower emulator needed longer. Screen checks now wait up to 15 s, and absence checks pass a short wait on purpose.
 - **A test case was based on a misread note.** The cart-after-restart case first expected the cart to survive; I re-checked it on the live app and updated the case to the observed behaviour.
-- **Brief adb drops on the emulator** right after a cold boot or between sessions. Only session **start-up** is hardened (cleaning up leftovers and one retry on those two exact errors); tests themselves are never retried.
+- **Brief adb drops on the emulator** right after a cold boot or between sessions. Only **set-up** is hardened: session start-up (cleaning up leftovers and one retry on those exact errors) and the per-test app reset (waiting for the device and one retry); tests themselves are never retried.
 
 ## Running it
 

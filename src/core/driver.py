@@ -15,6 +15,8 @@ log = logging.getLogger(__name__)
 # Session start-up (not a test) can hit a brief emulator adb drop right after another session or a cold boot.
 # These are the signatures of that environment problem; anything else fails at once.
 _STARTUP_ADB_ERRORS = ("device offline", "instrumentation process cannot be initialized")
+# The per-test app reset (set-up, not a test) can hit the same drop on the CI emulator; adb then exits 255 mid-command.
+_RESET_ADB_ERRORS = ("device offline", "exited with code 255")
 
 
 def _options(settings: Settings) -> UiAutomator2Options:
@@ -41,9 +43,13 @@ def _options(settings: Settings) -> UiAutomator2Options:
     return options
 
 
+def _adb() -> str:
+    return os.path.join(os.environ.get("ANDROID_HOME", os.path.expanduser("~/Android/Sdk")), "platform-tools", "adb")
+
+
 def _clean_device_side(settings: Settings) -> None:
     """Remove leftovers of an aborted session (see skills/mobile-teardown, Pitfalls)."""
-    adb = os.path.join(os.environ.get("ANDROID_HOME", os.path.expanduser("~/Android/Sdk")), "platform-tools", "adb")
+    adb = _adb()
     device = ["-s", settings.device_name]
     commands = [
         [*device, "forward", "--remove-all"],
@@ -64,3 +70,23 @@ def create_driver(settings: Settings) -> webdriver.Remote:
         log.warning("Session start-up hit a known emulator adb drop; cleaning up and trying once more.")
         _clean_device_side(settings)
         return webdriver.Remote(settings.appium_url, options=_options(settings))
+
+
+def reset_app(driver: webdriver.Remote, settings: Settings) -> None:
+    """Clear the app's data and launch it; after a known adb drop, wait for the device and try once more."""
+    for attempt in (1, 2):
+        try:
+            driver.terminate_app(settings.app_package)
+            driver.execute_script("mobile: clearApp", {"appId": settings.app_package})
+            driver.activate_app(settings.app_package)
+            return
+        except WebDriverException as error:
+            if attempt == 2 or not any(signature in str(error) for signature in _RESET_ADB_ERRORS):
+                raise
+            log.warning("The app reset hit a known emulator adb drop; waiting for the device and trying once more.")
+            subprocess.run(
+                [_adb(), "-s", settings.device_name, "wait-for-device"],
+                capture_output=True,
+                timeout=60,
+                check=False,
+            )
