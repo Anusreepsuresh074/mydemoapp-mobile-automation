@@ -33,8 +33,24 @@ else
     booted=$(adb -s "$device" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')
     adb -s "$device" shell input keyevent KEYCODE_HOME >/dev/null 2>&1
     focus=$(adb -s "$device" shell dumpsys window 2>/dev/null | grep -m1 -E "mCurrentFocus" | tr -d '\r')
+    # A fresh CI emulator often shows a system "not responding" dialog while it settles after boot.
+    # Close system dialogs and look again for up to a minute; only a dialog that stays is BROKEN.
+    dismissed=0
+    for _ in 1 2 3 4 5 6; do
+      grep -qi "not responding" <<<"$focus" || break
+      dismissed=1
+      adb -s "$device" shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS >/dev/null 2>&1
+      sleep 10
+      focus=$(adb -s "$device" shell dumpsys window 2>/dev/null | grep -m1 -E "mCurrentFocus" | tr -d '\r')
+    done
     if [[ "$booted" == 1 && -n "$focus" ]]; then
-      if grep -qi "not responding" <<<"$focus"; then say BROKEN device "$device shows a 'not responding' dialog"; else say HEALTHY device "$device booted and responsive"; fi
+      if grep -qi "not responding" <<<"$focus"; then
+        say BROKEN device "$device shows a 'not responding' dialog that does not go away"
+      elif (( dismissed )); then
+        say DEGRADED device "$device booted; a 'not responding' dialog was closed while it settled"
+      else
+        say HEALTHY device "$device booted and responsive"
+      fi
     else
       say BROKEN device "$device online but not responsive (boot_completed=$booted)"
     fi
