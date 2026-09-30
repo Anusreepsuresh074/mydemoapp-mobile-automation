@@ -42,6 +42,13 @@ class Settings:
         )
 
 
+class Secret(str):
+    """A string that prints as ******** in tracebacks and assertion messages."""
+
+    def __repr__(self) -> str:
+        return "'********'"
+
+
 def credentials() -> tuple[str, str]:
     """The test account, from the environment only (see get-mobile-auth)."""
-    return _required("TEST_USERNAME"), _required("TEST_PASSWORD")
+    return _required("TEST_USERNAME"), Secret(_required("TEST_PASSWORD"))

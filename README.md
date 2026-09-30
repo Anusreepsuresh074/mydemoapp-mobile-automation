@@ -1,6 +1,6 @@
 # My Demo App: Android Mobile Test Automation
 
-![Mobile tests](https://github.com/Anusreepsuresh074/mydemoapp-mobile-automation/actions/workflows/mobile-tests.yml/badge.svg)
+![Mobile tests](https://github.com/Anusreepsuresh074/mydemoapp-mobile-automation/actions/workflows/mobile-tests.yml/badge.svg) · **[Live Allure report](https://anusreepsuresh074.github.io/mydemoapp-mobile-automation/)** · **[Test Summary Report](docs/test-summary-report.md)**
 
 Automated end-to-end tests for Sauce Labs' [My Demo App](https://github.com/saucelabs/my-demo-app-android), a public practice shopping app for Android, written in **Python + pytest** with **Appium** (UiAutomator2) and reported in **Allure**. They cover the whole shopping journey (catalogue, sorting, product details, cart, sign-in and sign-out, checkout with address, payment and review) and how the app behaves on a phone (Back button, background, rotation, restart).
 
@@ -30,7 +30,7 @@ This is the mobile part of my QA portfolio, alongside my [UI tests in Playwright
 | **Known defects handled honestly:** strict xfail, so the run flags it the moment the app is fixed; a case blocked by a defect is skipped with its reason, not faked | e.g. `test_review_hides_the_card_number`, `test_two_different_products_add_up` |
 | **Mobile-specific checks:** the phone's Back button, background and resume, rotation, app restart, the soft keyboard, disabled buttons | [`tests/app_state/`](tests/app_state/test_app_state.py) |
 | **Environment health first:** memory, CPU, Appium and device are checked before a run, so a bad machine fails clearly instead of as flaky tests | [`scripts/env-check.sh`](scripts/env-check.sh) |
-| **Reporting:** Allure steps, with a screenshot and page source attached on failure | [`tests/conftest.py`](tests/conftest.py), [`docs/test-summary-report.md`](docs/test-summary-report.md) |
+| **Reporting:** Allure steps, with a screenshot and page source attached on failure; the password is never recorded (the login step takes no parameters, and it prints as `********` in tracebacks) | [`tests/conftest.py`](tests/conftest.py), [`docs/test-summary-report.md`](docs/test-summary-report.md) |
 | **CI/CD:** an Android emulator with KVM on GitHub Actions; smoke on push, regression nightly; results uploaded as artifacts | [`.github/workflows/mobile-tests.yml`](.github/workflows/mobile-tests.yml) |
 | **Root-causing, not retrying:** no test retries anywhere; framework problems were fixed at the cause | [Found while building it](#found-while-building-it) |
 
@@ -99,6 +99,7 @@ npx allure serve allure-results        # open the report
 1. **Lint:** ruff on the code.
 2. **Mobile tests:** installs the dependencies and Appium, downloads the app build, boots an API 35 emulator with KVM acceleration, and runs the smoke tests (on push and pull request) or the full regression (nightly and on demand).
 3. **Artifacts:** the Allure results and the Appium log are uploaded on every run, pass or fail.
+4. **Live report:** nightly and manual runs publish the full regression's Allure report, with history, to [GitHub Pages](https://anusreepsuresh074.github.io/mydemoapp-mobile-automation/).
 
 Repository secrets needed: `TEST_USERNAME`, `TEST_PASSWORD` (the app's public demo login).
 

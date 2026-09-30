@@ -18,15 +18,16 @@ class LoginPage(BasePage):
         """True when this screen is showing; pass a short timeout when checking that it is NOT."""
         return self.is_visible(self.btn_login, timeout)
 
-    @allure.step("Log in as {username}")
     def log_in(self, username: str, password: str) -> None:
         """Types only the fields given (an empty string leaves that field empty), then taps Login."""
-        if username:
-            self.type_text(self.input_username, username)
-        if password:
-            self.type_text(self.input_password, password)
-        self.hide_keyboard()
-        self.tap(self.btn_login)
+        # A step made with `with` records no parameters, so the password never reaches the report.
+        with allure.step(f"Log in as {username}"):
+            if username:
+                self.type_text(self.input_username, username)
+            if password:
+                self.type_text(self.input_password, password)
+            self.hide_keyboard()
+            self.tap(self.btn_login)
 
     def password_is_masked(self) -> bool:
         return self.attribute_of(self.input_password, "password") == "true"

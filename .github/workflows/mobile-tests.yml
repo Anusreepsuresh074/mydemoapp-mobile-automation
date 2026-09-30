@@ -97,3 +97,39 @@ jobs:
             allure-results/
             reports/
           retention-days: 14
+
+  # Publishes the full regression's Allure report, with run-over-run history, to GitHub Pages
+  # (gh-pages branch). Nightly and manual runs only, so a push's smoke run never replaces it.
+  # One-time repo setup: Settings -> Pages -> Deploy from branch -> gh-pages.
+  allure-report:
+    needs: android
+    if: always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download the Allure results
+        uses: actions/download-artifact@v8
+        with:
+          name: allure-results-${{ github.run_id }}
+          path: results
+
+      - name: Fetch previous report (for history)
+        uses: actions/checkout@v7
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Generate Allure report
+        run: |
+          if [ -d gh-pages/history ]; then cp -r gh-pages/history results/allure-results/; fi
+          npm install -g allure-commandline
+          allure generate results/allure-results --clean -o allure-report
+
+      - name: Publish to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-report
