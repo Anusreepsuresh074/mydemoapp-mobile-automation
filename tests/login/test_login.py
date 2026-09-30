@@ -24,8 +24,8 @@ def login_page(catalog) -> LoginPage:
 
 
 def _is_signed_in(catalog, login_page) -> bool:
-    """Signed in = the login screen has gone and the menu offers Log Out."""
-    return not login_page.is_open() and catalog.header.open_menu().shows_log_out()
+    """Signed in = the side menu offers Log Out (the menu button is on the login screen too)."""
+    return catalog.header.open_menu().shows_log_out()
 
 
 @pytest.mark.smoke

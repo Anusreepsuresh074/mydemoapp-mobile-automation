@@ -2,7 +2,7 @@
 
 import allure
 
-from src.pages.base_page import BasePage, by_accessibility_id, by_id
+from src.pages.base_page import DEFAULT_TIMEOUT, BasePage, by_accessibility_id, by_id
 from src.pages.components.header_bar import HeaderBar
 
 
@@ -30,8 +30,9 @@ class ProductPage(BasePage):
         super().__init__(driver)
         self.header = HeaderBar(driver)
 
-    def is_open(self) -> bool:
-        return self.is_visible(self.btn_add_to_cart)
+    def is_open(self, timeout: float = DEFAULT_TIMEOUT) -> bool:
+        """True when this screen is showing; pass a short timeout when checking that it is NOT."""
+        return self.is_visible(self.btn_add_to_cart, timeout)
 
     def name(self) -> str:
         return self.text_of(self.txt_name)

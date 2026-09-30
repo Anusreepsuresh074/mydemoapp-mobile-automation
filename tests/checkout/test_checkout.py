@@ -92,7 +92,7 @@ def test_each_required_address_field_is_needed(app, address_page, missing):
     errors = address_page.errors()
     assert list(errors) == [missing], f"expected an error only for {missing}, got {errors}"
     assert address_page.is_open()
-    assert not CheckoutPaymentPage(app).is_open()
+    assert not CheckoutPaymentPage(app).is_open(timeout=5)
 
 
 @pytest.mark.regression
@@ -112,7 +112,7 @@ def test_signed_in_shopper_goes_straight_to_the_address_form(app, signed_in):
     signed_in.open_product(0).add_to_cart()
     signed_in.header.open_cart().proceed_to_checkout()
     assert CheckoutAddressPage(app).is_open()
-    assert not LoginPage(app).is_open(), "Login was shown although the shopper is signed in"
+    assert not LoginPage(app).is_open(timeout=5), "Login was shown although the shopper is signed in"
 
 
 @pytest.mark.regression
@@ -124,7 +124,7 @@ def test_empty_payment_form_is_refused(app, payment_page):
     assert errors, "no payment errors shown"
     assert set(errors.values()) == {PAYMENT_ERROR}, f"errors shown: {errors}"
     assert payment_page.is_open()
-    assert not CheckoutReviewPage(app).is_open()
+    assert not CheckoutReviewPage(app).is_open(timeout=5)
 
 
 @pytest.mark.regression
@@ -133,7 +133,7 @@ def test_empty_payment_form_is_refused(app, payment_page):
 def test_missing_card_holder_name_is_refused(app, payment_page):
     review = _submit_card(app, payment_page, {key: value for key, value in CARD.items() if key != "name"})
     assert payment_page.errors() == {"name": PAYMENT_ERROR}
-    assert not review.is_open()
+    assert not review.is_open(timeout=5)
 
 
 @pytest.mark.regression
@@ -150,7 +150,7 @@ def test_missing_card_holder_name_is_refused(app, payment_page):
 @allure.title("CHK-P1-10..P2-13 Invalid card details are refused (known defect D-06): {card_change}")
 def test_invalid_card_details_are_refused(app, payment_page, card_change):
     review = _submit_card(app, payment_page, {**CARD, **card_change})
-    assert not review.is_open(), f"the review opened with invalid card details {card_change}"
+    assert not review.is_open(timeout=5), f"the review opened with invalid card details {card_change}"
     assert payment_page.errors(), "no error shown"
 
 
@@ -162,7 +162,7 @@ def test_card_number_field_refuses_letters(app, payment_page):
     typed = payment_page.typed("number")
     assert not typed.startswith("abcd"), f"letters were typed into the card number: {typed}"
     review = _submit_card(app, payment_page, {key: value for key, value in CARD.items() if key != "number"})
-    assert not review.is_open(), "the review opened without a card number"
+    assert not review.is_open(timeout=5), "the review opened without a card number"
 
 
 @pytest.mark.regression

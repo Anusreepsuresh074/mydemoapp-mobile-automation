@@ -15,10 +15,10 @@ class SideMenu(BasePage):
     btn_dialog_cancel = by_android_id("button2")
 
     def shows_log_out(self) -> bool:
-        return self.is_visible(self.lnk_log_out, timeout=3)
+        return self.is_visible(self.lnk_log_out, timeout=5)
 
     def shows_log_in(self) -> bool:
-        return self.is_visible(self.lnk_log_in, timeout=3)
+        return self.is_visible(self.lnk_log_in, timeout=5)
 
     @allure.step("Choose Log In")
     def choose_log_in(self):

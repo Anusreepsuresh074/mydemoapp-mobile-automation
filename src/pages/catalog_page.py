@@ -2,7 +2,7 @@
 
 import allure
 
-from src.pages.base_page import BasePage, by_id
+from src.pages.base_page import DEFAULT_TIMEOUT, BasePage, by_id
 from src.pages.components.header_bar import HeaderBar
 from src.pages.components.sort_sheet import SortSheet
 from src.pages.product_page import ProductPage
@@ -22,8 +22,9 @@ class CatalogPage(BasePage):
     def title(self) -> str:
         return self.text_of(self.txt_title)
 
-    def is_open(self) -> bool:
-        return self.is_visible(self.btn_sort)
+    def is_open(self, timeout: float = DEFAULT_TIMEOUT) -> bool:
+        """True when this screen is showing; pass a short timeout when checking that it is NOT."""
+        return self.is_visible(self.btn_sort, timeout)
 
     def product_names(self) -> list[str]:
         return self.texts_of(self.txt_product_name)
@@ -50,13 +51,15 @@ class CatalogPage(BasePage):
         """Every (name, price) in the catalogue, in screen order."""
         self.find(self.txt_product_name)
         seen: dict[str, str] = {}
-        screens_without_new = 0
-        while screens_without_new < 2:
-            before = len(seen)
+        # Stop when Appium reports the end of the list, not after screens with nothing new:
+        # a swipe that does not move the grid once used to end the read after 10 of 24 products.
+        for _ in range(30):
             for name, price in self.visible_products():
                 seen.setdefault(name, price)
-            self.swipe_up()
-            screens_without_new = screens_without_new + 1 if len(seen) == before else 0
+            if not self.swipe_up():
+                break
+        for name, price in self.visible_products():
+            seen.setdefault(name, price)
         return list(seen.items())
 
     def first_product(self) -> tuple[str, str]:

@@ -2,7 +2,7 @@
 
 import allure
 
-from src.pages.base_page import BasePage, by_id
+from src.pages.base_page import DEFAULT_TIMEOUT, BasePage, by_id
 
 
 class CheckoutCompletePage(BasePage):
@@ -10,8 +10,9 @@ class CheckoutCompletePage(BasePage):
     txt_thank_you = by_id("thankYouTV")
     btn_continue_shopping = by_id("shoopingBt")
 
-    def is_open(self) -> bool:
-        return self.is_visible(self.txt_complete)
+    def is_open(self, timeout: float = DEFAULT_TIMEOUT) -> bool:
+        """True when this screen is showing; pass a short timeout when checking that it is NOT."""
+        return self.is_visible(self.txt_complete, timeout)
 
     def messages(self) -> tuple[str, str]:
         return self.text_of(self.txt_complete), self.text_of(self.txt_thank_you)

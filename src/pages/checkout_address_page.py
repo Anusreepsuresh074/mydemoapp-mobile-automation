@@ -2,7 +2,7 @@
 
 import allure
 
-from src.pages.base_page import BasePage, by_id
+from src.pages.base_page import DEFAULT_TIMEOUT, BasePage, by_id
 
 
 class CheckoutAddressPage(BasePage):
@@ -30,8 +30,9 @@ class CheckoutAddressPage(BasePage):
         "country": input_country,
     }
 
-    def is_open(self) -> bool:
-        return self.is_visible(self.btn_to_payment) and self.is_visible(self.input_full_name)
+    def is_open(self, timeout: float = DEFAULT_TIMEOUT) -> bool:
+        """True when this screen is showing; pass a short timeout when checking that it is NOT."""
+        return self.is_visible(self.btn_to_payment, timeout) and self.is_visible(self.input_full_name, timeout)
 
     @allure.step("Fill the shipping address")
     def fill(self, address: dict) -> None:
@@ -58,6 +59,7 @@ class CheckoutAddressPage(BasePage):
 
     def errors(self) -> dict[str, str]:
         """The error shown under each required field, by field key; fields without an error are left out."""
+        self.wait_for_any(list(self.ERRORS.values()))
         shown = {}
         for key, locator in self.ERRORS.items():
             elements = self.driver.find_elements(*locator)

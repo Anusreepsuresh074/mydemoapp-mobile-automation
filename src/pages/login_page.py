@@ -2,7 +2,7 @@
 
 import allure
 
-from src.pages.base_page import BasePage, by_id
+from src.pages.base_page import DEFAULT_TIMEOUT, BasePage, by_id
 
 
 class LoginPage(BasePage):
@@ -14,8 +14,9 @@ class LoginPage(BasePage):
     msg_password_error = by_id("passwordErrorTV")
     lnk_demo_user = by_id("username1TV")
 
-    def is_open(self) -> bool:
-        return self.is_visible(self.btn_login)
+    def is_open(self, timeout: float = DEFAULT_TIMEOUT) -> bool:
+        """True when this screen is showing; pass a short timeout when checking that it is NOT."""
+        return self.is_visible(self.btn_login, timeout)
 
     @allure.step("Log in as {username}")
     def log_in(self, username: str, password: str) -> None:

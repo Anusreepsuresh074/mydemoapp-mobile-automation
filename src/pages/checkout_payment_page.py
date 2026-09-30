@@ -2,7 +2,7 @@
 
 import allure
 
-from src.pages.base_page import BasePage, by_id
+from src.pages.base_page import DEFAULT_TIMEOUT, BasePage, by_id
 
 
 class CheckoutPaymentPage(BasePage):
@@ -26,8 +26,9 @@ class CheckoutPaymentPage(BasePage):
         "security_code": input_security_code,
     }
 
-    def is_open(self) -> bool:
-        return self.is_visible(self.input_card_number)
+    def is_open(self, timeout: float = DEFAULT_TIMEOUT) -> bool:
+        """True when this screen is showing; pass a short timeout when checking that it is NOT."""
+        return self.is_visible(self.input_card_number, timeout)
 
     ERRORS = {
         "name": msg_card_name_error,
@@ -37,6 +38,7 @@ class CheckoutPaymentPage(BasePage):
     }
 
     def errors(self) -> dict[str, str]:
+        self.wait_for_any(list(self.ERRORS.values()))
         shown = {}
         for key, locator in self.ERRORS.items():
             elements = self.driver.find_elements(*locator)

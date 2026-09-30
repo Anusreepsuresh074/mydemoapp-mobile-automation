@@ -57,6 +57,14 @@ class BasePage:
         except Exception:
             return False
 
+    def wait_for_any(self, locators: list[Locator], timeout: float = 5) -> bool:
+        """True as soon as one of the elements is visible; False if none shows within the timeout."""
+        try:
+            self.wait(timeout).until(ec.any_of(*(ec.visibility_of_element_located(loc) for loc in locators)))
+            return True
+        except Exception:
+            return False
+
     def tap(self, locator: Locator) -> None:
         def _click(driver) -> bool:
             element = ec.element_to_be_clickable(locator)(driver)
@@ -97,10 +105,10 @@ class BasePage:
             f'.scrollIntoView(new UiSelector().resourceId("{value}"))',
         )
 
-    def swipe_up(self) -> None:
-        """Scroll the content down by most of a screen."""
+    def swipe_up(self) -> bool:
+        """Scroll the content down by most of a screen; False once the end of the content is reached."""
         size = self.driver.get_window_size()
-        self.driver.execute_script(
+        return self.driver.execute_script(
             "mobile: scrollGesture",
             {
                 "left": size["width"] * 0.1,

@@ -2,7 +2,7 @@
 
 import allure
 
-from src.pages.base_page import BasePage, by_id
+from src.pages.base_page import DEFAULT_TIMEOUT, BasePage, by_id
 
 
 class CheckoutReviewPage(BasePage):
@@ -18,9 +18,10 @@ class CheckoutReviewPage(BasePage):
     txt_total = by_id("totalAmountTV")
     btn_place_order = by_id("paymentBtn")
 
-    def is_open(self) -> bool:
+    def is_open(self, timeout: float = DEFAULT_TIMEOUT) -> bool:
+        """True when this screen is showing; pass a short timeout when checking that it is NOT."""
         # Place Order shares its id with the payment screen's Review Order button, so the heading decides.
-        return self.is_visible(self.txt_heading, timeout=5)
+        return self.is_visible(self.txt_heading, timeout)
 
     def details(self) -> dict:
         return {
