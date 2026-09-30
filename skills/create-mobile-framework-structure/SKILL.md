@@ -33,16 +33,18 @@ name, settings and empty folders, and nothing else.
 4. **Write settings** to `.env` (and `.env.example` with empty values):
    app name, short name, type, package/activity or bundle id, build path,
    platform, Appium host and port, device name.
-5. **Create the folders**, one per layer (see `docs/framework-rules.md`):
+5. **Create the folders** for the Page Object Model (see `docs/framework-rules.md`):
 
 ```
-src/screens/<app>/        # locators, one class per screen
-src/actions/<app>/        # taps, typing, gestures on one screen
-src/flows/<app>/          # business journeys across screens
-src/constants/<app>/
-tests/<app>/
-data/<app>/
-docs/<app>-flow.md        # screens, flows and status (starts "Unconfirmed")
+src/core/                     # config.py (settings), driver.py (the Appium session)
+src/pages/base_page.py        # BasePage: waits, tap, type, read, scroll, Back; locator helpers
+src/pages/<screen>_page.py    # one page object per screen: locators + what a user does there
+src/pages/components/         # parts shared by several screens (header, menu, dialogs)
+src/utils/                    # helpers with no screen (e.g. reading prices)
+tests/conftest.py             # session, fresh app per test, shared starting-point fixtures
+tests/<feature>/test_<feature>.py
+tests/<feature>/<feature>_td.py   # that feature's test data
+docs/<app>-flow.md            # screens, locators and status (starts "Unconfirmed")
 ```
 
 6. **Add a start-up guard** in `tests/conftest.py`: fail the session at once

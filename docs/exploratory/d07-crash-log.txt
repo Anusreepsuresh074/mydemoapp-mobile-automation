@@ -1,0 +1,8 @@
+FATAL EXCEPTION: main
+Process: com.saucelabs.mydemoapp.android, PID: 20538
+java.lang.NullPointerException: Attempt to invoke virtual method 'int java.lang.Integer.intValue()' on a null object reference
+	at com.saucelabs.mydemoapp.android.view.fragments.ProductCatalogFragment.lambda$setAdapter$0$ProductCatalogFragment(ProductCatalogFragment.java:156)
+	at com.saucelabs.mydemoapp.android.view.fragments.ProductCatalogFragment$$ExternalSyntheticLambda0.OnClick(Unknown Source:4)
+	at com.saucelabs.mydemoapp.android.view.adapters.ProductsAdapter$1.onClick(ProductsAdapter.java:57)
+	at android.view.View.performClick(View.java:8028)
+	at android.view.View.performClickInternal(View.java:8005)

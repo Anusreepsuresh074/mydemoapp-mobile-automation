@@ -37,7 +37,7 @@ jobs:
     name: Android emulator (${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && 'regression' || 'smoke' }})
     needs: lint
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     env:
       TEST_USERNAME: ${{ secrets.TEST_USERNAME }}
       TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}

@@ -4,86 +4,104 @@
 
 | Version | Date | Author | Test design | Status |
 |---|---|---|---|---|
-| 1.0 | 2026-09-29 | Anusree P (drafted with the mobile-test-report skill) | [`context/mydemoapp-shopping-testcases.md`](context/mydemoapp-shopping-testcases.md), 19 cases, approved 2026-09-29 | **Final** |
+| 1.0 | 2026-09-29 | Anusree P (drafted with the mobile-test-report skill) | Test cases v1: 19 cases, approved 2026-09-29 | Superseded by 2.0 |
+| 2.0 | 2026-09-30 | Anusree P (drafted with the mobile-test-report skill) | [`context/mydemoapp-shopping-testcases.md`](context/mydemoapp-shopping-testcases.md) v2: 62 cases, approved 2026-09-30 | **Final**: adds six exploratory sessions, 43 new cases, 6 new defects, and the Page Object Model rebuild |
 
 ## 2. Executive summary
 
-**Verdict: the shopping journey works end to end, with 2 real defects found.** In the full regression, all 19 automated cases ran: **17 passed and 2 failed as expected (xfail)**, because of the two known defects in the app. No test was retried. The 6 smoke tests also passed straight after a cold boot of the emulator.
+**Verdict: the main shopping journey works, but the app is not release-ready: 8 defects were found, including a crash (D-07) and two security issues (D-01, D-08).** The full regression ran 66 tests (62 cases; one case runs once per required field): **53 passed, 12 failed as expected because of known defects (strict xfail), and 1 was blocked by the crash.** No test was retried.
 
 Key findings:
 
-1. **The main journey is sound.** Browsing the catalogue, sorting, opening a product, adding to the cart, signing in, checking out and placing an order all behave as observed and expected. The same holds for the validation messages and for going to the background during checkout.
-2. **Defect D-01: login accepts any credentials** (P1, case LGN-P1-05). An unknown username with a wrong password signs the user in. In a real shop this would be a security defect.
-3. **Defect D-02: quantity can go down to 0** (P1, case PRD-P1-02). The minus button on the product screen goes below 1, so a product can be added to the cart with quantity 0.
-4. **The suite is stable.** The full regression gave the same result (17 passed, 2 xfailed) on two earlier runs and again on the final run. Two framework problems found on 2026-09-29 were fixed before the final runs (section 7).
+1. **The happy path is sound.** Browsing, all four sort orders across all 24 products, product details, the cart, sign-in and sign-out, checkout and placing an order behave as expected, and so do going to the background and the phone's Back button on most screens.
+2. **D-07, critical: the app crashes** when a shopper opens a product, goes back and opens a different product. The device log shows a `NullPointerException` in the catalogue code. It also blocks testing a cart with two different products.
+3. **Security: D-01** any username and password sign in (even the real user with a wrong password), and **D-08** the review shows the full card number.
+4. **Validation gaps:** card details are not checked (D-06), usernames need not be email addresses (D-04), and the quantity can reach 0 (D-02), although Add to cart is then disabled.
+5. **Smaller issues:** Back with the side menu open closes the app (D-03); the country error message is cut off (D-05).
+6. **Exploratory testing paid off:** six chartered sessions found 6 of the 8 defects and 43 of the 62 cases, and showed that the old sort tests checked only 4 of 24 products.
 
-**Recommendation:** raise D-01 and D-02 with the app's owners. Keep both tests as strict xfail, so the suite reports the moment either defect is fixed. Add payment validation cases once the field rules are known (section 8).
+**Recommendation:** do not release until D-07, D-01 and D-08 are fixed. Fix D-06 and D-04 next. Keep every defect test as a strict xfail, so the suite reports the moment one is fixed, and re-test the blocked two-product case after D-07.
 
 ## 3. Scope
 
 | In scope | Out of scope |
 |---|---|
-| Catalogue, sorting, product details, cart, sign-in, checkout (address, payment, review, complete), app going to the background | WebView, QR code scanner, geo location, drawing, fingerprint, virtual USB, "crash app" menu items |
+| Catalogue, sorting, product details (quantity, colour, rating), cart, sign-in and sign-out, checkout (address, payment, review, complete); the phone's Back button, background, rotation and restart | WebView, QR code scanner, geo location, drawing, fingerprint, virtual USB, "crash app" menu items; the `visual@example.com` visual-testing user |
 
-Because the app has no requirements document, the expected behaviour comes from walking the live app. Each rule and its source is in [`context/mydemoapp-shopping-context.md`](context/mydemoapp-shopping-context.md).
+Because the app has no requirements document, the expected behaviour comes from walking the live app and from stated assumptions (marked *Assumption* in [`context/mydemoapp-shopping-context.md`](context/mydemoapp-shopping-context.md), 31 rules).
 
-## 4. Test environment
+## 4. Test approach
+
+| Activity | What was done |
+|---|---|
+| Scripted test design | 62 cases, each with an ID, priority, type (positive / negative / edge), steps, expected result and rule |
+| Exploratory testing | Six chartered sessions with notes and evidence: [`exploratory/exploratory-sessions.md`](exploratory/exploratory-sessions.md) |
+| Coverage audit | Every rule and screen mapped to cases: [`context/mydemoapp-coverage-audit.md`](context/mydemoapp-coverage-audit.md), no blocking gaps |
+| Automation | Appium + pytest with the Page Object Model; every case automated (the blocked one is written and skipped) |
+
+## 5. Test environment
 
 | Item | Detail |
 |---|---|
 | App under test | [My Demo App](https://github.com/saucelabs/my-demo-app-android) by Sauce Labs, version 2.3.0 (build 27), package `com.saucelabs.mydemoapp.android` |
-| Device | Android emulator `mydemo_api35`: Android 15 (API 35), x86_64, animations off |
+| Device | Android emulator `mydemo_api35`: Pixel 6 profile, Android 15 (API 35), x86_64, animations off |
 | Automation | Appium 3.8.0 with the UiAutomator2 driver; Python 3.12, pytest 9.1, Appium Python Client 6.0 |
-| Framework | Four layers: screens (locators) → actions → flows → tests; every locator was confirmed on the running app |
+| Framework | Page Object Model: `BasePage`, one page object per screen, shared components, fixtures; every locator confirmed on the running app |
 | Reporting | Allure (steps, plus a screenshot and page source attached on failure) |
-| CI | GitHub Actions: the smoke tests on every push and pull request, the full regression nightly and on demand |
+| CI | GitHub Actions: the smoke tests on every push and pull request, the full regression nightly and on demand, on the same Pixel 6 / API 35 emulator |
 
-## 5. Execution summary
+## 6. Execution summary
 
-Final runs on 2026-09-29, local emulator:
+Final local runs on 2026-09-30:
 
-| Run | Suite | Tests | Passed | Xfailed (known defect) | Failed | Duration |
-|---|---|---|---|---|---|---|
-| Smoke, straight after a cold boot | `-m smoke` | 6 | 6 | 0 | 0 | 83 s |
-| Full regression | `-m regression` | 19 | 17 | 2 | 0 | 250 s |
+| Run | Suite | Test runs | Passed | Xfailed (known defect) | Skipped (blocked) | Failed | Duration |
+|---|---|---|---|---|---|---|---|
+| Full regression | `-m regression` | 66 | 53 | 12 | 1 | 0 | 1130 s |
+| Smoke | `-m smoke` | 6 | 6 | 0 | 0 | 0 | 91 s |
 
-CI runs on GitHub Actions (Android emulator, Pixel 6, API 35) on 2026-09-29:
-
-| Run | Suite | Result | Duration |
-|---|---|---|---|
-| [36606150334](https://github.com/Anusreepsuresh074/mydemoapp-mobile-automation/actions/runs/36606150334) (push) | smoke | 6 passed | 143 s |
-| [36606749256](https://github.com/Anusreepsuresh074/mydemoapp-mobile-automation/actions/runs/36606749256) (manual) | regression | 17 passed, 2 xfailed (second attempt; the first stopped at the health check, see section 7) | 339 s |
+{CI_RUNS}
 
 ### Results by feature (full regression)
 
-| Feature | Cases | Passed | Xfailed |
-|---|---|---|---|
-| Catalogue and product | 5 | 4 | 1 (D-02) |
-| Cart | 4 | 4 | 0 |
-| Sign-in | 5 | 4 | 1 (D-01) |
-| Checkout and app state | 5 | 5 | 0 |
-| **Total** | **19** | **17** | **2** |
+| Feature | Cases | Test runs | Passed | Xfailed | Skipped |
+|---|---|---|---|---|---|
+| Catalogue | 6 | 6 | 6 | 0 | 0 |
+| Product | 8 | 8 | 6 | 2 (D-02, D-07) | 0 |
+| Cart | 10 | 10 | 9 | 0 | 1 (blocked by D-07) |
+| Sign-in | 13 | 13 | 10 | 3 (D-01 ×2, D-04) | 0 |
+| Checkout | 17 | 21 | 15 | 6 (D-05, D-06 ×4, D-08) | 0 |
+| App and phone | 8 | 8 | 7 | 1 (D-03) | 0 |
+| **Total** | **62** | **66** | **53** | **12** | **1** |
 
-### Results by priority
+### Results by type and priority
 
-| Priority | Cases | Passed | Xfailed |
-|---|---|---|---|
-| P0 (release-blocking) | 6 | 6 | 0 |
-| P1 | 11 | 9 | 2 |
-| P2 | 2 | 2 | 0 |
+| | Cases | Pass expected | Known defect | Blocked |
+|---|---|---|---|---|
+| Positive | 28 | 27 | 0 | 1 |
+| Negative | 18 | 8 | 10 | 0 |
+| Edge | 16 | 14 | 2 | 0 |
+| P0 | 7 | 6 | 1 (D-07) | 0 |
+| P1 | 31 | 24 | 6 | 1 |
+| P2 | 24 | 19 | 5 | 0 |
 
 Each case's status and test path are in the status table of [`mydemoapp-flow.md`](mydemoapp-flow.md#flow-status).
 
-## 6. Defects
+## 7. Defects
 
-| ID | Case | Severity | Steps | Expected | Actual |
+| ID | Severity | Case | Steps | Expected | Actual |
 |---|---|---|---|---|---|
-| D-01 | LGN-P1-05 | P1 (security) | Menu → Log In, sign in as `nobody@example.com` / `wrong-password` | Stays on Login with an error | Signed in; the menu shows "Log Out" |
-| D-02 | PRD-P1-02 | P1 | Open a product, tap + twice, then − three times | Quantity stops at 1 | Quantity reaches 0 |
+| D-07 | Critical | PRD-P0-08 (blocks CRT-P1-10) | Open a product, press Back, open a different product | The second product opens | The app closes; `NullPointerException` in `ProductCatalogFragment.java:156` ([log](exploratory/d07-crash-log.txt)) |
+| D-01 | High (security) | LGN-P1-05, LGN-P1-06 | Sign in as `nobody@example.com` / `wrong-password`, or as the real user with a wrong password | Refused with an error | Signed in |
+| D-08 | High (security) | CHK-P1-16 | Reach the review screen | The card number is masked | The full number is shown ([screenshot](exploratory/screenshots/d08-review-full-card-number.png)) |
+| D-06 | High | CHK-P1-10 to CHK-P2-13 | Enter a 5-digit card number, an expired date (01/20), an incomplete date ("1") or a 1-digit security code | Refused with an error | Accepted; the review opens |
+| D-03 | Medium | APP-P2-07 | Open the side menu, press the phone's Back button | The menu closes | The whole app closes |
+| D-04 | Medium | LGN-P2-07 | Sign in as `bob` (not an email) | Refused with an error | Signed in |
+| D-02 | Medium | PRD-P1-02 | On a product, tap + twice, then − three times | Quantity stops at 1 | Quantity reaches 0 (Add to cart is then disabled) |
+| D-05 | Low | CHK-P2-06 | Leave Country empty, tap To Payment | "Please provide your country." | "Please provide your" ([screenshot](exploratory/screenshots/d05-country-error-cut-off.png)) |
 
-Both are marked **strict xfail**: the test is expected to fail while the defect exists. If the app is fixed, the test "unexpectedly passes" and the run fails, prompting someone to remove the marker.
+Every defect test is marked **strict xfail**: it is expected to fail while the defect exists. If the app is fixed, the test "unexpectedly passes" and the run fails, prompting someone to remove the marker. The blocked case is **skipped** with the reason "Blocked by D-07".
 
-## 7. Issues found and fixed during testing
+## 8. Issues found and fixed during testing
 
 | Symptom | Cause | Fix |
 |---|---|---|
@@ -91,26 +109,30 @@ Both are marked **strict xfail**: the test is expected to fail while the defect 
 | The test run hung at the end with the Appium server still running | `scripts/run-tests.sh` started Appium through `npx` and stopped only `npx`, not the server | The script starts the Appium binary directly, so the exit trap stops the server. Verified after every run. |
 | In CI, 4 smoke tests timed out on the product screen's quantity and Add to cart button | The CI emulator's default device profile is 320x640, so those elements were below the screen edge (seen in the CI failure screenshot) | The workflow runs the emulator as a Pixel 6 (`profile: pixel_6`), the same 1080x2400 screen as the local emulator |
 | In CI, the sign-in tests failed with "TEST_USERNAME is not set" although the repository secrets existed | CI copies `.env.example` to `.env`, and `run-tests.sh` loaded it over the environment, replacing the secrets with empty placeholders | `run-tests.sh` loads `.env` only for keys not already set, so CI secrets win |
-| One CI regression attempt stopped before any test ran: "emulator-5554 shows a 'not responding' dialog" | A system dialog on the freshly booted CI emulator; not reproduced on the second attempt | None needed: the health check stopped the run as designed instead of producing 19 misleading failures. Watched as an open item (section 8) |
+| One CI regression attempt stopped before any test ran: "emulator-5554 shows a 'not responding' dialog" | A system dialog on the freshly booted CI emulator; not reproduced on the second attempt | None needed: the health check stopped the run as designed instead of producing many misleading failures. Watched as an open item (section 8) |
+| The sort tests passed while checking only 4 of 24 products | The catalogue scrolls; the tests read only the first screen (found in exploratory session S1) | The catalogue page object reads each card as a (name, price) pair and scrolls to the end; all four sort tests check all 24 products |
+| "The review is open" was true while still on the payment screen | Review Order and Place Order share the resource id `paymentBtn` | `CheckoutReviewPage.is_open()` checks the review heading instead of the button |
+| The quantity-0 test waited forever to tap Add to cart | The button is disabled at quantity 0, and the framework only taps clickable elements (correctly) | A separate page method presses a disabled button on purpose |
 | CRT-P2-04 first expected the cart to survive a restart | A misread walkthrough note | The case was re-checked on the live app and updated to the observed behaviour (a restart empties the cart) |
 
-## 8. Coverage and open items
+## 9. Coverage and open items
 
-The [coverage audit](context/mydemoapp-coverage-audit.md) found no blocking gaps: all 15 rules and all 11 in-scope screens are covered, and every P0 journey is in the smoke suite.
+The [coverage audit](context/mydemoapp-coverage-audit.md) found no blocking gaps: all 31 rules and all in-scope screens are covered, every feature has positive, negative and edge cases, and every passing P0 journey is in the smoke suite.
 
 | # | Open item | Next step |
 |---|---|---|
-| 1 | Payment details (R12) are only tested on the happy path | Add validation cases once the field rules are known |
-| 2 | Sorting covers 2 of the 4 orders | Add price high-to-low and name A-to-Z if sorting changes |
-| 3 | Tested on one Android version (API 35) | Add a second API level to CI for broader device coverage |
+| 1 | A cart with two different products is blocked by D-07 | Re-run CRT-P1-10 once D-07 is fixed (remove the skip) |
+| 2 | The payment rules (card length, a future expiry date, a 3–4 digit code) are assumptions | Confirm them with a product owner |
+| 3 | Tested on one Android version (API 35) and one screen size | Add a second API level and a small-screen profile to CI |
 | 4 | A freshly booted CI emulator occasionally shows a "not responding" dialog, and the health check stops the run | If it recurs in the nightly runs, dismiss boot-time system dialogs before the health check |
+| 5 | Real-device behaviour (camera, battery, real networks) is not covered by an emulator | Run the smoke suite on a device cloud |
 
-## 9. How to reproduce
+## 10. How to reproduce
 
 ```bash
 scripts/fetch-build.sh             # download the pinned app build
 scripts/run-tests.sh -m smoke      # 6 smoke tests
-scripts/run-tests.sh -m regression # all 19 tests
+scripts/run-tests.sh -m regression # all 66 test runs
 npx allure serve allure-results    # open the report
 ```
 

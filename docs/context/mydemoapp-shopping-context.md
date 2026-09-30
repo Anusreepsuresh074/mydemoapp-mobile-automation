@@ -48,10 +48,26 @@ Catalogue → Sort sheet → Product details → Cart → Login → Checkout: ad
 | R9 | The locked-out demo user gets "Sorry this user has been locked out." | Live app |
 | R10 | *Assumption:* unknown usernames or wrong passwords are refused | Expected behaviour; **observed: any username and password are accepted and the user is signed in (menu shows Log Out)** |
 | R11 | Address: full name, address line 1, city, zip and country are required, with a message per field | Live app |
-| R12 | Payment details are required before the review | Live app (not yet walked field by field) |
+| R12 | Payment: card holder name, card number, expiry date and security code are required ("Value looks invalid."); the card number accepts digits only. *Assumption:* the number, date and code must also be valid | Live app, S5; **observed: short numbers, 1-digit codes and expired or incomplete dates are accepted (D-06)** |
 | R13 | The review shows the items, the address, the card holder and a total | Live app |
 | R14 | Placing the order shows "Checkout Complete" and empties the cart | Live app |
 | R15 | Killing and relaunching the app empties the cart | Live app (corrected after the first test run: an early walkthrough note said the cart survived a restart, which was a misreading) |
+| R16 | The catalogue holds 24 products, $7.99 to $49.99; 4 show per screen | Live app, S1 (2026-09-30) |
+| R17 | At quantity 0, Add to cart is disabled | Live app, S2 |
+| R18 | A product has 4 colours; tapping one selects it | Live app, S2 |
+| R19 | Tapping a rating star shows "Thank you for submitting your review!" with Continue | Live app, S2 |
+| R20 | Adding the same product again raises that row's quantity instead of adding a row | Live app, S3 |
+| R21 | The cart's + and − change the quantity, count, total and badge; − from 1 removes the item | Live app, S3 |
+| R22 | *Assumption:* the username must be an email address | Expected behaviour; **observed: any text is accepted (D-04)** |
+| R23 | The password field is masked; tapping a listed demo username fills the form | Live app, S4 |
+| R24 | Log Out asks for confirmation (CANCEL / LOGOUT) and then opens Login; a restart signs the user out | Live app, S4 |
+| R25 | A signed-in shopper goes from the cart straight to the address form | Live app, S4 |
+| R26 | The review adds DHL Standard Delivery, $5.99, to the cart total | Live app, S5 (answers context question 1) |
+| R27 | *Assumption:* the review masks the card number | Card-industry practice; **observed: the full number is shown (D-08)** |
+| R28 | "Billing address is the same as shipping" is ticked by default; unticking shows a billing form | Live app, S5 |
+| R29 | Going to the background keeps the current screen and what was typed | Live app, S6 |
+| R30 | The app is locked to portrait | App manifest (`screenOrientation=portrait`), S6 |
+| R31 | The phone's Back button returns from a product or the cart to the catalogue; *assumption:* with the side menu open it closes the menu | Live app, S6; **observed: it closes the app (D-03)** |
 
 ## Edge cases
 

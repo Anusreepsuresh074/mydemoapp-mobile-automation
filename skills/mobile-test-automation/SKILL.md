@@ -1,6 +1,6 @@
 ---
 name: mobile-test-automation
-description: Confirms every locator on the running app (never from source code or designs), then builds each approved test case through the four layers (screens, actions, flows, tests) with Appium and pytest, runs it, and updates the flow document's status. Also the skill for fixing a flaky or broken test. Use after mobile-test-design is approved.
+description: Confirms every locator on the running app (never from source code or designs), then builds each approved test case with the Page Object Model (page objects, shared components, fixtures, tests) with Appium and pytest, runs it, and updates the flow document's status. Also the skill for fixing a flaky or broken test. Use after mobile-test-design is approved.
 ---
 
 # Mobile Test Automation
@@ -10,7 +10,7 @@ Builds and runs the approved cases.
 ## When to use
 
 - After `mobile-test-design` has an approved list.
-- To repair a failing or flaky test in one layer.
+- To repair a failing or flaky test.
 
 ## Rules
 
@@ -44,9 +44,11 @@ Locator fields start with a type prefix: `btn_`, `input_`, `txt_`, `msg_`,
 2. Read the approved case.
 3. Walk the journey on the device, dumping each screen; record the screens,
    their texts and the chosen locators in the flow document.
-4. Implement, in order: **screen** (locators) → **actions** (what a user
-   can do on it) → **flow** (a journey across screens) → **test**
-   (the checks).
+4. Implement, in order: the **page object** for each screen (locators as
+   class attributes, plus methods for what a user does and reads there;
+   a method that lands on another screen returns that page) → shared
+   **components** (header, menu, dialogs) → **fixtures** for common
+   starting points → the **test** and its `<feature>_td.py` data.
 5. Lint, then run the tests by marker (`pytest -m smoke`).
 6. Fix the usual problems: stale elements (find again), the keyboard covering
    a button (hide it), loading spinners (wait for them to go), webviews
